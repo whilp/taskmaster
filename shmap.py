@@ -41,7 +41,7 @@ def summarize(procs, nprocs=None):
         len(running), completed, nprocs, (100.0 * failed)/nprocs)
 
 def logfile(*paths):
-    path = os.path.join(*paths)
+    path = os.path.join(".", *paths)
 
     try:
         os.makedirs(os.path.dirname(path))
@@ -51,7 +51,7 @@ def logfile(*paths):
     return open(path, "a")
 
 def maptask(task, targets, logfile,
-        cwd=None, env={}, maxrunning=1, interval=.2, handler=None):
+        maxrunning=1, interval=.2, handler=None):
     ttargets = len(targets)
     procs = []
 
@@ -75,7 +75,7 @@ def maptask(task, targets, logfile,
         out, err = [logfile(target, x) for x in ("out", "err")]
         log.debug("starting %s %r", task, target)
         process = subprocess.Popen([task, target],
-            stdout=out, stderr=err, cwd=cwd, env=env)
+            stdout=out, stderr=err)
         procs.append(process)
 
     while status(procs)[0]:
@@ -98,12 +98,20 @@ def parseargs(argv):
     parser.allow_interspersed_args = False
 
     defaults = {
+        "running": None,
+        "interval": .2,
         "quiet": 0,
         "silent": False,
         "verbose": 0,
     }
 
     # Global options.
+    parser.add_option("-n", "--running", dest="running",
+        default=defaults["running"], action="store",
+        help="number of running tasks (default: number of CPUs or 1)")
+    parser.add_option("-i", "--interval", dest="interval",
+        default=defaults["interval"], action="store",
+        help="polling interval (default: %(interval)d)" % defaults)
     parser.add_option("-q", "--quiet", dest="quiet",
         default=defaults["quiet"], action="count",
         help="decrease the logging verbosity")
@@ -150,19 +158,12 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     task = args.pop(0)
     targets = args
-    logdir = '.'
-    maxrunning = 2
-    cwd = '.'
-    env = {}
-
-    def _logfile(*paths):
-        paths = [logdir] + list(paths)
-        return logfile(*paths)
+    maxrunning = opts.running
 
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
 
-    procs, nprocs = maptask(task, targets, cwd=cwd, env=env,
+    procs, nprocs = maptask(task, targets,
             maxrunning=maxrunning, logfile=logfile, handler=handler)
     handler(procs, nprocs)
 
