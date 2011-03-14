@@ -211,7 +211,7 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
             maxrunning=maxrunning, logfile=logfile, handler=handler)
     handler(procs, nprocs)
 
-def run():
+def entry():
     try:
         ret = main(sys.argv, sys.stdin, sys.stdout, sys.stderr)
     except KeyboardInterrupt:
@@ -220,4 +220,4 @@ def run():
     sys.exit(ret)
 
 if __name__ == "__main__": # pragma: nocover
-    run()
+    entry()
