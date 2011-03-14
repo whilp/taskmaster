@@ -171,9 +171,6 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     (opts, args) = parseargs(argv)
     level = logging.WARNING - ((opts.verbose - opts.quiet) * 10)
-
-    (opts, args) = parseargs(argv)
-    level = logging.WARNING - ((opts.verbose - opts.quiet) * 10)
     if opts.silent:
         level = logging.CRITICAL + 1
     level = max(1, level)
