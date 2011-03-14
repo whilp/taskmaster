@@ -38,8 +38,8 @@ def groups(stream, default=None):
         value = groups.get(value, [value])
 
         _groups = [group, default]
-        for _group in [g for g in _groups if g is not None]:
-            getattr(groups.setdefault(_group, set()), method)(value)
+        [getattr(groups.setdefault(g, set()), method)(value)
+                for g in _groups if g is not None]
 
     return groups
 
