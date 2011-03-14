@@ -41,7 +41,10 @@ def groups(stream, default=None):
                 continue
             if value in groups:
                 value = groups[value]
-                do = "update"
+                if do == "remove":
+                    do = "difference_update"
+                else:
+                    do = "update"
             getattr(groups.setdefault(thisgroup, set()), do)(value)
 
     return groups
@@ -300,3 +303,22 @@ class TestGroups(BaseTest):
         result = groups(stream)
 
         self.assertEqual(result["b"], set(["foo", "bar"]))
+
+    def test_exclude_groups(self):
+        stream = iter("""
+            +a
+            foo
+            bar
+
+            +b
+            foo
+            bar
+            baz
+
+            +c
+            b
+            -a
+            """.split())
+        result = groups(stream)
+
+        self.assertEqual(result["c"], set(["baz"]))
