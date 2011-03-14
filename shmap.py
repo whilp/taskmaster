@@ -16,6 +16,35 @@ except AttributeError:
 log = logging.getLogger("shmap")
 log.addHandler(NullHandler())
 
+def ncpu_bsd():
+    stdout = subprocess.Popen(["sysctl", "-n", "hw.ncpufound"],
+        stdout=subprocess.PIPE).communicate()[0].strip()
+    if stdout:
+        return int(stdout.strip())
+
+def ncpu_linux():
+    ncpu = 0
+    for line in open("/proc/cpuinfo", 'r'):
+        if line.startswith("processor"):
+            ncpu += 1
+    if ncpu > 0:
+        return ncpu
+    
+ncpuos = {
+    "openbsd4": ncpu_bsd,
+    "linux2": ncpu_linux,
+}
+
+def ncpu():
+    getter = ncpuos.get(sys.platform, None)
+    ncpu = None
+    if getter is not None:
+        ncpu = getter()
+    if ncpu is None:
+        ncpu = 1
+
+    return ncpu
+
 def status(procs):
     running, succeeded, failed = [], [], []
     for proc in procs:
