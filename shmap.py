@@ -189,6 +189,9 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     targets = args
     maxrunning = opts.running
 
+    if maxrunning is None:
+        maxrunning = ncpu()
+
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
 
