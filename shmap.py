@@ -80,8 +80,7 @@ def logfile(*paths):
             raise
     return open(path, "a")
 
-def maptask(task, targets, logfile,
-        maxrunning=1, interval=.2, handler=None):
+def maptask(task, targets, logfile, maxrunning=1, interval=.2, handler=None):
     ttargets = len(targets)
     procs = []
 
