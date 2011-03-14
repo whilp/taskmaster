@@ -29,23 +29,17 @@ def groups(stream, default=None):
             group = line.strip("[]")
             continue
 
-        do = "add"
-        if line.startswith("-"):
-            do = "remove"
-            line = line.strip("-")
-        value = line
+        ops = {
+            "-": "difference_update",
+            "+": "update",
+        }
+        method = ops.get(line[0], "update")
+        value = line.strip(''.join(ops))
+        value = groups.get(value, [value])
 
-        thesegroups = [group, default]
-        for thisgroup in thesegroups:
-            if thisgroup is None:
-                continue
-            if value in groups:
-                value = groups[value]
-                if do == "remove":
-                    do = "difference_update"
-                else:
-                    do = "update"
-            getattr(groups.setdefault(thisgroup, set()), do)(value)
+        _groups = [group, default]
+        for _group in [g for g in _groups if g is not None]:
+            getattr(groups.setdefault(_group, set()), method)(value)
 
     return groups
 
