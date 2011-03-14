@@ -33,9 +33,13 @@ def groups(stream, default=None):
             "-": "difference_update",
             "+": "update",
         }
+        ongroup = ops.get(line[0], False) and True
         method = ops.get(line[0], "update")
         value = line.strip(''.join(ops))
-        value = groups.get(value, [value])
+        if ongroup and value in groups:
+            value = groups[value]
+        else:
+            value = [value]
 
         _groups = [group, default]
         [getattr(groups.setdefault(g, set()), method)(value)
@@ -292,7 +296,7 @@ class TestGroups(BaseTest):
             bar
 
             [b]
-            a
+            +a
             """.split())
         result = groups(stream)
 
@@ -310,7 +314,7 @@ class TestGroups(BaseTest):
             baz
 
             [c]
-            b
+            +b
             -a
             """.split())
         result = groups(stream)
