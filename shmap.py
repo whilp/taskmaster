@@ -29,7 +29,7 @@ def groups(stream, default=None):
             group = line.strip("+")
             continue
 
-        do = "append"
+        do = "add"
         if line.startswith("-"):
             do = "remove"
             line = line.strip("-")
@@ -41,8 +41,8 @@ def groups(stream, default=None):
                 continue
             if value in groups:
                 value = groups[value]
-                do = "extend"
-            getattr(groups.setdefault(thisgroup, []), do)(value)
+                do = "update"
+            getattr(groups.setdefault(thisgroup, set()), do)(value)
 
     return groups
 
@@ -264,7 +264,7 @@ class TestGroups(BaseTest):
         result = groups(stream)
 
         self.assertEqual(result["login"], 
-            ["login01", "login02", "login03"])
+            set(["login01", "login02", "login03"]))
 
     def test_default(self):
         stream = iter("""
@@ -275,7 +275,7 @@ class TestGroups(BaseTest):
         result = groups(stream, default="all")
 
         self.assertEqual(result["all"], 
-            ["login01", "login02", "login03"])
+            set(["login01", "login02", "login03"]))
 
     def test_exclude(self):
         stream = iter("""
@@ -286,7 +286,7 @@ class TestGroups(BaseTest):
             -login02""".split())
         result = groups(stream)
 
-        self.assertEqual(result["login"], ["login01", "login03"])
+        self.assertEqual(result["login"], set(["login01", "login03"]))
 
     def test_include_groups(self):
         stream = iter("""
@@ -299,4 +299,4 @@ class TestGroups(BaseTest):
             """.split())
         result = groups(stream)
 
-        self.assertEqual(result["b"], ["foo", "bar"])
+        self.assertEqual(result["b"], set(["foo", "bar"]))
