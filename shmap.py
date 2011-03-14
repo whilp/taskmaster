@@ -3,6 +3,7 @@ import logging
 import optparse
 import os
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -187,6 +188,19 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     task = args.pop(0)
     targets = args
     maxrunning = opts.running
+
+    e = None
+    try:
+        isexec = os.stat(task).st_mode & stat.S_IEXEC
+    except OSError, e:
+        isexec = False
+
+    if not isexec:
+        msg = "cannot execute task %r" % task
+        if e:
+            msg += " (%s)" % e
+        stderr.write(msg + "\n")
+        return 1
 
     if maxrunning is None:
         maxrunning = ncpu()
