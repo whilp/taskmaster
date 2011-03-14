@@ -103,8 +103,7 @@ def maptask(task, targets, logfile,
 
         out, err = [logfile(target, x) for x in ("out", "err")]
         log.debug("starting %s %r", task, target)
-        process = subprocess.Popen([task, target],
-            stdout=out, stderr=err)
+        process = subprocess.Popen([task, target], stdout=out, stderr=err)
         procs.append(process)
 
     while status(procs)[0]:
