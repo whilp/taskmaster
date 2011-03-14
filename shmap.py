@@ -17,6 +17,25 @@ except AttributeError:
 log = logging.getLogger("shmap")
 log.addHandler(NullHandler())
 
+def groups(stream, default=None):
+    groups = {}
+    group = None
+    for line in stream:
+        line = line.strip()
+        if not line:
+            group = None
+            continue
+        elif line.startswith("+"):
+            group = line.strip("+")
+            continue
+
+        if group is not None:
+            groups.setdefault(group, []).append(line)
+        if default is not None:
+            groups.setdefault(default, []).append(line)
+
+    return groups
+
 def ncpu_bsd():
     stdout = subprocess.Popen(["sysctl", "-n", "hw.ncpufound"],
         stdout=subprocess.PIPE).communicate()[0].strip()
@@ -218,3 +237,32 @@ def entry():
 
 if __name__ == "__main__": # pragma: nocover
     entry()
+
+import unittest
+
+class BaseTest(unittest.TestCase):
+    pass
+
+class TestGroups(BaseTest):
+    
+    def test_basic(self):
+        stream = iter("""
+            +login
+            login01
+            login02
+            login03""".split())
+        result = groups(stream)
+
+        self.assertEqual(result["login"], 
+            ["login01", "login02", "login03"])
+
+    def test_default(self):
+        stream = iter("""
+            +login
+            login01
+            login02
+            login03""".split())
+        result = groups(stream, default="all")
+
+        self.assertEqual(result["all"], 
+            ["login01", "login02", "login03"])
