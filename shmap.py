@@ -25,8 +25,8 @@ def groups(stream, default=None):
         if not line:
             group = None
             continue
-        elif line.startswith("+"):
-            group = line.strip("+")
+        elif line.startswith("["):
+            group = line.strip("[]")
             continue
 
         do = "add"
@@ -260,7 +260,7 @@ class TestGroups(BaseTest):
     
     def test_basic(self):
         stream = iter("""
-            +login
+            [login]
             login01
             login02
             login03""".split())
@@ -271,7 +271,7 @@ class TestGroups(BaseTest):
 
     def test_default(self):
         stream = iter("""
-            +login
+            [login]
             login01
             login02
             login03""".split())
@@ -282,7 +282,7 @@ class TestGroups(BaseTest):
 
     def test_exclude(self):
         stream = iter("""
-            +login
+            [login]
             login01
             login02
             login03
@@ -293,11 +293,11 @@ class TestGroups(BaseTest):
 
     def test_include_groups(self):
         stream = iter("""
-            +a
+            [a]
             foo
             bar
 
-            +b
+            [b]
             a
             """.split())
         result = groups(stream)
@@ -306,16 +306,16 @@ class TestGroups(BaseTest):
 
     def test_exclude_groups(self):
         stream = iter("""
-            +a
+            [a]
             foo
             bar
 
-            +b
+            [b]
             foo
             bar
             baz
 
-            +c
+            [c]
             b
             -a
             """.split())
