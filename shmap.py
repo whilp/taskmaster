@@ -29,10 +29,20 @@ def groups(stream, default=None):
             group = line.strip("+")
             continue
 
-        if group is not None:
-            groups.setdefault(group, []).append(line)
-        if default is not None:
-            groups.setdefault(default, []).append(line)
+        do = "append"
+        if line.startswith("-"):
+            do = "remove"
+            line = line.strip("-")
+        value = line
+
+        thesegroups = [group, default]
+        for thisgroup in thesegroups:
+            if thisgroup is None:
+                continue
+            if value in groups:
+                value = groups[value]
+                do = "extend"
+            getattr(groups.setdefault(thisgroup, []), do)(value)
 
     return groups
 
@@ -266,3 +276,27 @@ class TestGroups(BaseTest):
 
         self.assertEqual(result["all"], 
             ["login01", "login02", "login03"])
+
+    def test_exclude(self):
+        stream = iter("""
+            +login
+            login01
+            login02
+            login03
+            -login02""".split())
+        result = groups(stream)
+
+        self.assertEqual(result["login"], ["login01", "login03"])
+
+    def test_include_groups(self):
+        stream = iter("""
+            +a
+            foo
+            bar
+
+            +b
+            a
+            """.split())
+        result = groups(stream)
+
+        self.assertEqual(result["b"], ["foo", "bar"])
