@@ -13,7 +13,7 @@ except AttributeError:
     class NullHandler(logging.Handler):
         def emit(self, record): pass
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("shmap")
 log.addHandler(NullHandler())
 
 def status(procs):
@@ -142,7 +142,7 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
         level = logging.CRITICAL + 1
     level = max(1, level)
 
-    format = "%(name)s %(message)s"
+    format = "%(name)s: %(message)s"
     handler = logging.StreamHandler(stderr)
     handler.setFormatter(logging.Formatter(format))
     log.addHandler(handler)
