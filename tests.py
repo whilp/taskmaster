@@ -103,7 +103,7 @@ class TestGroups(BaseTest):
 
         self.assertEquals(result["all"], set(["baz"]))
 
-    def test_targetrange(self):
+    def test_targetrange_notarange(self):
         result = targetrange("login01")
 
         self.assertEqual(result, ["login01"])
