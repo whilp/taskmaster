@@ -14,7 +14,7 @@ except AttributeError:
     class NullHandler(logging.Handler):
         def emit(self, record): pass
 
-log = logging.getLogger("shmap")
+log = logging.getLogger("taskmaster")
 log.addHandler(NullHandler())
 
 def groups(stream, default=None, data=None):
