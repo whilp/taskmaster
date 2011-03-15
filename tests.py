@@ -114,7 +114,7 @@ class TestGroups(BaseTest):
         self.assertEqual(result, ["login01"])
 
     def test_targetrange_range(self):
-        result = targetrange("login01-04")
+        result = targetrange("login[01:04]")
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])
@@ -125,7 +125,7 @@ class TestGroups(BaseTest):
         self.assertEqual(result, ["login01-"])
 
     def test_targetrange_uneven_widths(self):
-        result = targetrange("login01-4")
+        result = targetrange("login[:04]")
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])

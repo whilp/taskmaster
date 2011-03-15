@@ -17,24 +17,29 @@ except AttributeError:
 log = logging.getLogger("taskmaster")
 log.addHandler(NullHandler())
 
-def targetrange(value):
-    idx = value.find("-")
+def targetrange(value, inclusive=True):
+    idx = value.find("[")
     if idx < 0 or value.startswith('"'):
         return [value.strip('"')]
 
-    end = value[idx + 1:]
-    width = len(end)
-    base = value[:idx - width]
-    begin = value[len(base):idx]
+    def getvalue(spec, attr, default):
+        value = getattr(spec, attr)
+        if value in (None, ""):
+            value = default
+        return int(value)
 
-    try:
-        begin = int(begin)
-        end = int(end)
-    except ValueError:
-        return [value]
+    base = value[:idx]
+    rest = value[idx:].strip("[]")
+    spec = slice(*rest.split(":"))
+    start = getvalue(spec, "start", 1)
+    stop = getvalue(spec, "stop", 1)
+    step = getvalue(spec, "step", 1)
+    width = max(len(spec.start), len(spec.stop))
+    if inclusive:
+        stop += 1
 
     format = "%s%%0%dd" % (base, width)
-    return [format % i for i in  range(int(begin), int(end) + 1)]
+    return [format % i for i in  range(start, stop, step)]
 
 def groups(stream, default=None, data=None):
     if data is None:
