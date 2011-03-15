@@ -126,7 +126,7 @@ def summarize(procs, nprocs=None):
     completed = succeeded + failed
 
     return ("%d/%d/%d tasks running/completed/total, %0.2f%% failed",
-        len(running), completed, nprocs, (100.0 * failed)/nprocs)
+        len(running), completed, nprocs, (100.0 * failed)/max(nprocs, 1))
 
 def logfile(*paths):
     path = os.path.join(".", *paths)
