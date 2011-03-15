@@ -129,7 +129,7 @@ def summarize(procs, nprocs=None):
         len(running), completed, nprocs, (100.0 * failed)/max(nprocs, 1))
 
 def logfile(*paths):
-    path = os.path.join(".", *paths)
+    path = os.path.join(*paths)
 
     try:
         os.makedirs(os.path.dirname(path))
@@ -184,6 +184,7 @@ def parseargs(argv):
     parser.allow_interspersed_args = False
 
     defaults = {
+        "out": "./",
         "targets": "./targets",
         "running": None,
         "interval": .2,
@@ -193,6 +194,9 @@ def parseargs(argv):
     }
 
     # Global options.
+    parser.add_option("-o", "--out", dest="out",
+        default=defaults["out"], action="store",
+        help="base directory for task stdout/stderr (default: %(out)r)" % defaults)
     parser.add_option("-t", "--targets", dest="targets",
         default=defaults["targets"], action="store",
         help="target file (default: %(targets)r)" % defaults)
@@ -277,8 +281,11 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
 
+    def _logfile(*paths):
+        return logfile(opts.out, *paths)
+
     procs, nprocs = maptask(task, targets, interval=interval,
-            maxrunning=maxrunning, logfile=logfile, handler=handler)
+            maxrunning=maxrunning, logfile=_logfile, handler=handler)
     handler(procs, nprocs)
 
 def entry():
