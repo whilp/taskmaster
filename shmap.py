@@ -335,5 +335,4 @@ class TestGroups(BaseTest):
             +a""".split())
         result = groups(stream, data=result)
 
-        print result
         self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
