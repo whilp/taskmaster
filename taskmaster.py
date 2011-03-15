@@ -172,8 +172,6 @@ def maptask(task, targets, output, maxrunning=1, interval=.2, handler=None):
 
         if hasattr(signal, "SIGUSR1"):
             signal.signal(signal.SIGUSR1, sighandler)
-        if hasattr(signal, "SIGINFO"):
-            signal.signal(signal.SIGINFO, sighandler)
 
     while targets:
         running, succeeded, failed = status(procs)
