@@ -266,12 +266,13 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     alltargets = {}
     try:
-        alltargets = groups(open(opts.targets, 'r'))
+        alltargets = groups(open(opts.targets, 'r'), default=".all")
         log.debug("read %d groups from targets file %r", len(alltargets), opts.targets)
     except IOError:
         pass
 
-    targets = groups(targets, default="all", data=alltargets)["all"]
+    targets = groups(targets,
+        default=".runtime", data=alltargets).get(".runtime", [])
 
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
