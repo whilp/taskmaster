@@ -326,6 +326,12 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
             echo(proc, streams, proc.target)
     handler(procs, nprocs)
 
+    failed = [proc for proc in procs if proc.returncode != 0]
+    if failed:
+        stdout.write("%d failed targets:\n" % len(failed))
+        for proc in failed:
+            stdout.write("%25s (%d)\n" % (proc.target, proc.returncode))
+
 def entry():
     try:
         ret = main(sys.argv, sys.stdin, sys.stdout, sys.stderr)
