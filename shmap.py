@@ -37,10 +37,13 @@ def groups(stream, default=None, data=None):
         ongroup = ops.get(line[0], False) and True
         method = ops.get(line[0], "update")
         value = line.strip(''.join(ops))
-        if ongroup and value in data:
-            value = data[value]
-        else:
+
+        if value not in data:
+            if ongroup and method == "update":
+                continue
             value = [value]
+        else:
+            value = data[value]
 
         groups = [group, default]
         [getattr(data.setdefault(g, set()), method)(value)
@@ -357,3 +360,9 @@ class TestGroups(BaseTest):
         result = groups(stream, default="all", data=data)
 
         self.assertEquals(result["all"], set(['baz', 'foo', 'bar']))
+
+    def test_undefined_group(self):
+        stream = iter("""baz +a""".split())
+        result = groups(stream, default="all")
+
+        self.assertEquals(result["all"], set(["baz"]))
