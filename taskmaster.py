@@ -20,7 +20,8 @@ log.addHandler(NullHandler())
 class Output(object):
     root = '.'
     
-    def __init__(self, target, name, handle=None):
+    def __init__(self, task, target, name, handle=None):
+        self.task = task
         self.target = target
         self.handle = handle
         self.name = name
@@ -29,7 +30,7 @@ class Output(object):
         return getattr(self.handle, attr)
 
     def path(self):
-        return os.path.join(self.root, self.target, self.name)
+        return os.path.join(self.root, self.task, self.target, self.name)
     path = property(path)
 
     def open(self, mode='a'):
@@ -183,7 +184,7 @@ def maptask(task, targets, output, maxrunning=1, interval=.2, handler=None):
 
         target = targets.pop()
 
-        out, err = [output(target, n).open() for n in ("out", "err")]
+        out, err = [output(task, target, n).open() for n in ("out", "err")]
         log.debug("starting %s %r", task, target)
         process = subprocess.Popen([task, target], stdout=out, stderr=err)
         process.out = out
