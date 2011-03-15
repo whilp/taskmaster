@@ -22,6 +22,20 @@ def targetrange(value):
     if idx < 0 or value.startswith('"'):
         return [value.strip('"')]
 
+    end = value[idx + 1:]
+    width = len(end)
+    base = value[:idx - width]
+    begin = value[len(base):idx]
+
+    try:
+        begin = int(begin)
+        end = int(end)
+    except ValueError:
+        return [value]
+
+    format = "%s%%0%dd" % (base, width)
+    return [format % i for i in  range(int(begin), int(end) + 1)]
+
 def groups(stream, default=None, data=None):
     if data is None:
         data = {}
