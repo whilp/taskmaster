@@ -11,7 +11,7 @@ options = dict(
     use_2to3=True,
     keywords="parallel ssh distributed management",
     url="http://packages.python.org/taskmaster",
-    classifiers = [
+    classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: System Administrators",
