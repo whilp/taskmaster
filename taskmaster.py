@@ -177,7 +177,7 @@ def parseargs(argv):
         help="number of running tasks (default: number of CPUs or 1)")
     parser.add_option("-i", "--interval", dest="interval",
         default=defaults["interval"], action="store",
-        help="polling interval (default: %(interval)d)" % defaults)
+        help="polling interval in seconds (default: %(interval).02f)" % defaults)
     parser.add_option("-q", "--quiet", dest="quiet",
         default=defaults["quiet"], action="count",
         help="decrease the logging verbosity")
@@ -238,6 +238,7 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     if maxrunning is None:
         maxrunning = ncpu()
+    interval = float(opts.interval)
 
     alltargets = {}
     try:
@@ -251,7 +252,7 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
 
-    procs, nprocs = maptask(task, targets,
+    procs, nprocs = maptask(task, targets, interval=interval,
             maxrunning=maxrunning, logfile=logfile, handler=handler)
     handler(procs, nprocs)
 
