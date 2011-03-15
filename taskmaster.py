@@ -81,6 +81,8 @@ def groups(stream, default=None, data=None):
     group = None
     for line in stream:
         line = line.strip()
+        if line.startswith("#"):
+            continue
         if not line:
             group = None
             continue

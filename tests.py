@@ -20,6 +20,16 @@ class TestGroups(BaseTest):
         self.assertEqual(result["login"], 
             set(["login01", "login02", "login03"]))
 
+    def test_comments(self):
+        stream = iter("""
+            [a]
+            b
+            # c!!!
+            d""".splitlines())
+        result = groups(stream)
+
+        self.assertEqual(result["a"], set(["b", "d"]))
+
     def test_default(self):
         stream = iter("""
             [login]
