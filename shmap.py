@@ -17,8 +17,9 @@ except AttributeError:
 log = logging.getLogger("shmap")
 log.addHandler(NullHandler())
 
-def groups(stream, default=None):
-    groups = {}
+def groups(stream, default=None, data=None):
+    if data is None:
+        data = {}
     group = None
     for line in stream:
         line = line.strip()
@@ -36,16 +37,16 @@ def groups(stream, default=None):
         ongroup = ops.get(line[0], False) and True
         method = ops.get(line[0], "update")
         value = line.strip(''.join(ops))
-        if ongroup and value in groups:
-            value = groups[value]
+        if ongroup and value in data:
+            value = data[value]
         else:
             value = [value]
 
-        _groups = [group, default]
-        [getattr(groups.setdefault(g, set()), method)(value)
-                for g in _groups if g is not None]
+        groups = [group, default]
+        [getattr(data.setdefault(g, set()), method)(value)
+                for g in groups if g is not None]
 
-    return groups
+    return data
 
 def ncpu_bsd():
     stdout = subprocess.Popen(["sysctl", "-n", "hw.ncpufound"],
@@ -320,3 +321,19 @@ class TestGroups(BaseTest):
         result = groups(stream)
 
         self.assertEqual(result["c"], set(["baz"]))
+
+    def test_multiple_runs(self):
+        stream = iter("""
+            [a]
+            foo
+            bar""".split())
+        result = groups(stream)
+
+        stream = iter("""
+            [b]
+            spam
+            +a""".split())
+        result = groups(stream, data=result)
+
+        print result
+        self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
