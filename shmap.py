@@ -336,3 +336,11 @@ class TestGroups(BaseTest):
         result = groups(stream, data=result)
 
         self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
+
+    def test_runtime_groups(self):
+        stream = iter("""[a] baz""".split())
+        data = groups(stream)
+        stream = iter("""foo bar +a""".split())
+        result = groups(stream, default="all", data=data)
+
+        self.assertEquals(result["all"], set(['baz', 'foo', 'bar']))
