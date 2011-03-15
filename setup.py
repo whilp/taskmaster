@@ -11,6 +11,10 @@ options = dict(
     use_2to3=True,
     keywords="parallel ssh distributed management",
     url="http://packages.python.org/taskmaster",
+    entry_points={
+        "console_scripts":
+            ["tm = taskmaster:entry"],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
