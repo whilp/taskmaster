@@ -17,6 +17,11 @@ except AttributeError:
 log = logging.getLogger("taskmaster")
 log.addHandler(NullHandler())
 
+def targetrange(value):
+    idx = value.find("-")
+    if idx < 0 or value.startswith('"'):
+        return [value.strip('"')]
+
 def groups(stream, default=None, data=None):
     if data is None:
         data = {}
@@ -41,7 +46,7 @@ def groups(stream, default=None, data=None):
         if value not in data:
             if ongroup and method == "update":
                 continue
-            value = [value]
+            value = targetrange(value)
         else:
             value = data[value]
 

@@ -2,7 +2,7 @@ import unittest
 
 import taskmaster
 
-from taskmaster import groups
+from taskmaster import groups, targetrange
 
 class BaseTest(unittest.TestCase):
     pass
@@ -102,3 +102,13 @@ class TestGroups(BaseTest):
         result = groups(stream, default="all")
 
         self.assertEquals(result["all"], set(["baz"]))
+
+    def test_targetrange(self):
+        result = targetrange("login01")
+
+        self.assertEqual(result, ["login01"])
+    
+    def test_targetrange_quoted(self):
+        result = targetrange('"login01"')
+
+        self.assertEqual(result, ["login01"])
