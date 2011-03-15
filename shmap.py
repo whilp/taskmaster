@@ -130,7 +130,7 @@ def maptask(task, targets, logfile, maxrunning=1, interval=.2, handler=None):
             time.sleep(interval)
             continue
 
-        target = targets.pop(0)
+        target = targets.pop()
 
         out, err = [logfile(target, x) for x in ("out", "err")]
         log.debug("starting %s %r", task, target)
@@ -157,6 +157,7 @@ def parseargs(argv):
     parser.allow_interspersed_args = False
 
     defaults = {
+        "targets": "./targets",
         "running": None,
         "interval": .2,
         "quiet": 0,
@@ -165,6 +166,9 @@ def parseargs(argv):
     }
 
     # Global options.
+    parser.add_option("-t", "--targets", dest="targets",
+        default=defaults["targets"], action="store",
+        help="target file (default: %(targets)r)" % defaults)
     parser.add_option("-n", "--running", dest="running",
         default=defaults["running"], action="store",
         help="number of running tasks (default: number of CPUs or 1)")
@@ -231,6 +235,15 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     if maxrunning is None:
         maxrunning = ncpu()
+
+    alltargets = {}
+    try:
+        alltargets = groups(open(opts.targets, 'r'))
+        log.debug("read %d groups from targets file %r", len(alltargets), opts.targets)
+    except IOError:
+        pass
+
+    targets = groups(targets, default="all", data=alltargets)["all"]
 
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
