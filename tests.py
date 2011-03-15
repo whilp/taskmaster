@@ -14,7 +14,7 @@ class TestGroups(BaseTest):
             [login]
             login01
             login02
-            login03""".split())
+            login03""".splitlines())
         result = groups(stream)
 
         self.assertEqual(result["login"], 
@@ -25,7 +25,7 @@ class TestGroups(BaseTest):
             [login]
             login01
             login02
-            login03""".split())
+            login03""".splitlines())
         result = groups(stream, default="all")
 
         self.assertEqual(result["all"], 
@@ -37,7 +37,7 @@ class TestGroups(BaseTest):
             login01
             login02
             login03
-            -login02""".split())
+            -login02""".splitlines())
         result = groups(stream)
 
         self.assertEqual(result["login"], set(["login01", "login03"]))
@@ -50,7 +50,7 @@ class TestGroups(BaseTest):
 
             [b]
             +a
-            """.split())
+            """.splitlines())
         result = groups(stream)
 
         self.assertEqual(result["b"], set(["foo", "bar"]))
@@ -69,7 +69,7 @@ class TestGroups(BaseTest):
             [c]
             +b
             -a
-            """.split())
+            """.splitlines())
         result = groups(stream)
 
         self.assertEqual(result["c"], set(["baz"]))
@@ -78,13 +78,13 @@ class TestGroups(BaseTest):
         stream = iter("""
             [a]
             foo
-            bar""".split())
+            bar""".splitlines())
         result = groups(stream)
 
         stream = iter("""
             [b]
             spam
-            +a""".split())
+            +a""".splitlines())
         result = groups(stream, data=result)
 
         self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
