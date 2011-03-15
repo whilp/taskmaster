@@ -17,6 +17,40 @@ except AttributeError:
 log = logging.getLogger("taskmaster")
 log.addHandler(NullHandler())
 
+class Output(object):
+    root = '.'
+    
+    def __init__(self, target, name, handle=None):
+        self.target = target
+        self.handle = handle
+        self.name = name
+
+    def __getattr__(self, attr):
+        return getattr(self.handle, attr)
+
+    def path(self):
+        return os.path.join(self.root, self.target, self.name)
+    path = property(path)
+
+    def open(self, mode='a'):
+        if self.handle is not None:
+            return self.handle
+        try:
+            os.makedirs(os.path.dirname(self.path))
+        except OSError, e:
+            if e.errno not in (17,):
+                raise
+        self.handle = open(self.path, mode)
+        return self.handle
+
+def echo(proc, streams, target):
+    if target:
+        target += "> "
+    for name, stream in streams:
+        lines = open(getattr(proc, name).name, 'r')
+        for line in lines:
+            stream.write("%s%s\n" % (target, line.strip()))
+
 def targetrange(value, inclusive=True):
     idx = value.find("[")
     if idx < 0 or value.startswith('"'):
@@ -128,17 +162,7 @@ def summarize(procs, nprocs=None):
     return ("%d/%d/%d tasks running/completed/total, %0.2f%% failed",
         len(running), completed, nprocs, (100.0 * failed)/max(nprocs, 1))
 
-def logfile(*paths):
-    path = os.path.join(*paths)
-
-    try:
-        os.makedirs(os.path.dirname(path))
-    except OSError, e:
-        if e.errno not in (17,):
-            raise
-    return open(path, "a")
-
-def maptask(task, targets, logfile, maxrunning=1, interval=.2, handler=None):
+def maptask(task, targets, output, maxrunning=1, interval=.2, handler=None):
     ttargets = len(targets)
     procs = []
 
@@ -159,9 +183,12 @@ def maptask(task, targets, logfile, maxrunning=1, interval=.2, handler=None):
 
         target = targets.pop()
 
-        out, err = [logfile(target, x) for x in ("out", "err")]
+        out, err = [output(target, n).open() for n in ("out", "err")]
         log.debug("starting %s %r", task, target)
         process = subprocess.Popen([task, target], stdout=out, stderr=err)
+        process.out = out
+        process.err = err
+        process.target = target
         procs.append(process)
 
     while status(procs)[0]:
@@ -184,6 +211,7 @@ def parseargs(argv):
     parser.allow_interspersed_args = False
 
     defaults = {
+        "echo": False,
         "out": "./",
         "targets": "./targets",
         "running": None,
@@ -194,6 +222,9 @@ def parseargs(argv):
     }
 
     # Global options.
+    parser.add_option("-e", "--echo", dest="echo",
+        default=defaults["echo"], action="store_true",
+        help="echo task stdout/stderr")
     parser.add_option("-o", "--out", dest="out",
         default=defaults["out"], action="store",
         help="base directory for task stdout/stderr (default: %(out)r)" % defaults)
@@ -281,11 +312,18 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     def handler(procs, nprocs):
         log.info(*summarize(procs, nprocs))
 
-    def _logfile(*paths):
-        return logfile(opts.out, *paths)
+    output = Output
+    output.root = opts.out
 
-    procs, nprocs = maptask(task, targets, interval=interval,
-            maxrunning=maxrunning, logfile=_logfile, handler=handler)
+    procs, nprocs = maptask(task, targets, output,
+            interval=interval, maxrunning=maxrunning, handler=handler)
+    if opts.echo:
+        streams = [
+            ("out", stdout),
+            ("err", stderr),
+        ]
+        for proc in procs:
+            echo(proc, streams, proc.target)
     handler(procs, nprocs)
 
 def entry():
