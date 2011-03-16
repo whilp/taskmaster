@@ -30,7 +30,7 @@ class Output(object):
         return getattr(self.handle, attr)
 
     def path(self):
-        return os.path.join(self.root, self.task, self.target, self.name)
+        return os.path.join(self.root, self.task, "%s.%s" % (self.target, self.name))
     path = property(path)
 
     def open(self, mode='a'):
