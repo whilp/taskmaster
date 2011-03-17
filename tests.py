@@ -125,6 +125,12 @@ class TestGroups(BaseTest):
 
         self.assertEquals(result["c"], set(["foo"]))
 
+    def test_difference_group(self):
+        stream = iter("""[a] foo bar [b] foo baz [c] |a ^b""".split())
+        result = groups(stream, default="all")
+        
+        self.assertEquals(result["c"], set(["baz", "bar"]))
+
     def test_alternate_group_syntax(self):
         stream = iter("""[a] foo bar [b] foo baz [c] +a *b""".split())
         result = groups(stream, default="all")
