@@ -113,6 +113,18 @@ class TestGroups(BaseTest):
 
         self.assertEquals(result["all"], set(["baz"]))
 
+    def test_empty_intersection_group(self):
+        stream = iter("""baz &a""".split())
+        result = groups(stream, default="all")
+
+        self.assertEquals(result["all"], set())
+
+    def test_intersection_group(self):
+        stream = iter("""[a] foo bar [b] foo baz [c] |a &b""".split())
+        result = groups(stream, default="all")
+
+        self.assertEquals(result["c"], set(["foo"]))
+
     def test_targetrange_notarange(self):
         result = targetrange("login01")
 
