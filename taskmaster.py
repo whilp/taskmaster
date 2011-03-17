@@ -53,69 +53,85 @@ def echo(proc, streams, target):
         for line in lines:
             stream.write("%s%s\n" % (target, line.strip()))
 
-def targetrange(value, inclusive=True):
-    idx = value.find("[")
-    if idx < 0 or value.startswith('"'):
-        return [value.strip('"')]
+class StringSets(object):
+    rangefmt = "%s%%0%dd" 
+    operators = {
+        "-": "difference_update",
+        "|": "update",
+        "+": "update",
+        "&": "intersection_update",
+        "*": "intersection_update",
+        "^": "symmetric_difference_update",
+    }
 
-    def getvalue(spec, attr, default):
+    def __init__(self, default=None, sets=None):
+        self.default = default
+        self.sets = sets
+
+    def parse(self, iterable):
+        if self.sets is None:
+            self.sets = {}
+        for name, token in self.tokenize(iterable):
+            self.expand(name, token, self.sets)
+
+        return self.sets
+
+    def range(self, string, inclusive=True):
+        idx = string.find("[")
+        if idx < 0 or string.startswith('"'):
+            return [string.strip('"')]
+
+        base = string[:idx]
+        rest = string[idx:].strip("[]")
+        spec = slice(*rest.split(":"))
+        start = self.getvalue(spec, "start", 1)
+        stop = self.getvalue(spec, "stop", 1)
+        step = self.getvalue(spec, "step", 1)
+        width = max(len(spec.start), len(spec.stop))
+        if inclusive:
+            stop += 1
+
+        format = self.rangefmt % (base, width)
+        return [format % i for i in  range(start, stop, step)]
+    range = classmethod(range)
+
+    def getvalue(self, spec, attr, default):
         value = getattr(spec, attr)
         if value in (None, ""):
             value = default
         return int(value)
+    getvalue = classmethod(getvalue)
 
-    base = value[:idx]
-    rest = value[idx:].strip("[]")
-    spec = slice(*rest.split(":"))
-    start = getvalue(spec, "start", 1)
-    stop = getvalue(spec, "stop", 1)
-    step = getvalue(spec, "step", 1)
-    width = max(len(spec.start), len(spec.stop))
-    if inclusive:
-        stop += 1
+    def tokenize(self, iterable):
+        name = None
+        for string in iterable:
+            for operator in self.operators:
+                string = string.replace(operator, " " + operator)
 
-    format = "%s%%0%dd" % (base, width)
-    return [format % i for i in  range(start, stop, step)]
+            for token in string.split():
+                string = string.split("#", 1)[0].strip()
+                if not string:
+                    continue
+                elif string.startswith("["):
+                    name = string.strip("[]")
+                    continue
+                yield name, string
 
-def setstream(stream, default=None, sets=None):
-    if sets is None:
-        sets = {}
-    name = None
-    for line in stream:
-        line = line.strip()
-        if line.startswith("#"):
-            continue
-        if not line:
-            name = None
-            continue
-        elif line.startswith("["):
-            name = line.strip("[]")
-            continue
-
-        ops = {
-            "-": "difference_update",
-            "|": "update",
-            "+": "update",
-            "&": "intersection_update",
-            "*": "intersection_update",
-            "^": "symmetric_difference_update",
-        }
-        onset = ops.get(line[0], False) and True
-        method = ops.get(line[0], "update")
-        value = line.strip(''.join(ops))
+    def expand(self, name, string, sets):
+        onset = self.operators.get(string[0], False) and True
+        method = self.operators.get(string[0], "update")
+        value = string.strip(''.join(self.operators))
 
         if value not in sets:
             if onset and method == "update":
-                continue
-            value = targetrange(value)
+                return
+            value = self.range(value)
         else:
             value = sets[value]
 
-        names = [name, default]
+        names = [name, self.default]
         [getattr(sets.setdefault(n, set()), method)(value)
                 for n in names if n is not None]
-
-    return sets
 
 def ncpu_bsd():
     stdout = subprocess.Popen(["sysctl", "-n", "hw.ncpufound"],
@@ -305,15 +321,16 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
         maxrunning = ncpu()
     interval = float(opts.interval)
 
-    alltargets = {}
+    targets = StringSets(default=".all")
     try:
-        alltargets = setstream(open(opts.targets, 'r'), default=".all")
-        log.debug("read %d target sets from file %r", len(alltargets), opts.targets)
+        targets.parse(open(opts.targets, 'r'))
+        log.debug("read %d target sets from file %r", len(targets.sets), opts.targets)
     except IOError:
         pass
 
-    targets = setstream(targets,
-        default=".runtime", sets=alltargets).get(".runtime", [])
+    targets.default = ".runtime"
+    targets.parse(args)
+    targets = targets.sets.get(".runtime", [])
 
     def handler(procs, nprocs):
         stderr.write(summarize(procs, nprocs) + "\n")

@@ -2,12 +2,12 @@ import unittest
 
 import taskmaster
 
-from taskmaster import setstream, targetrange
+from taskmaster import StringSets
 
 class BaseTest(unittest.TestCase):
     pass
 
-class Testsetstream(BaseTest):
+class TestStringSets(BaseTest):
     
     def test_basic(self):
         stream = iter("""
@@ -15,7 +15,7 @@ class Testsetstream(BaseTest):
             login01
             login02
             login03""".splitlines())
-        result = setstream(stream)
+        result = StringSets().parse(stream)
 
         self.assertEqual(result["login"], 
             set(["login01", "login02", "login03"]))
@@ -26,7 +26,7 @@ class Testsetstream(BaseTest):
             b
             # c!!!
             d""".splitlines())
-        result = setstream(stream)
+        result = StringSets().parse(stream)
 
         self.assertEqual(result["a"], set(["b", "d"]))
 
@@ -36,7 +36,7 @@ class Testsetstream(BaseTest):
             login01
             login02
             login03""".splitlines())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
 
         self.assertEqual(result["all"], 
             set(["login01", "login02", "login03"]))
@@ -48,7 +48,7 @@ class Testsetstream(BaseTest):
             login02
             login03
             -login02""".splitlines())
-        result = setstream(stream)
+        result = StringSets().parse(stream)
 
         self.assertEqual(result["login"], set(["login01", "login03"]))
 
@@ -61,7 +61,7 @@ class Testsetstream(BaseTest):
             [b]
             |a
             """.splitlines())
-        result = setstream(stream)
+        result = StringSets().parse(stream)
 
         self.assertEqual(result["b"], set(["foo", "bar"]))
 
@@ -80,86 +80,90 @@ class Testsetstream(BaseTest):
             |b
             -a
             """.splitlines())
-        result = setstream(stream)
+        result = StringSets(stream).parse(stream)
 
         self.assertEqual(result["c"], set(["baz"]))
 
     def test_multiple_runs(self):
+        sets = StringSets()
         stream = iter("""
             [a]
             foo
             bar""".splitlines())
-        result = setstream(stream)
+        sets.parse(stream)
 
         stream = iter("""
             [b]
             spam
             |a""".splitlines())
-        result = setstream(stream, sets=result)
+        result = sets.parse(stream)
 
         self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
 
     def test_runtime_setstream(self):
+        sets = StringSets(default="all")
         stream = iter("""[a] baz""".split())
-        sets = setstream(stream)
+        sets.parse(stream)
         stream = iter("""foo bar |a""".split())
-        result = setstream(stream, default="all", sets=sets)
+        result = sets.parse(stream)
 
         self.assertEquals(result["all"], set(['baz', 'foo', 'bar']))
 
     def test_undefined_setstream(self):
         stream = iter("""baz |a""".split())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
 
         self.assertEquals(result["all"], set(["baz"]))
 
     def test_empty_intersection_setstream(self):
         stream = iter("""baz &a""".split())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
 
         self.assertEquals(result["all"], set())
 
     def test_intersection_setstream(self):
         stream = iter("""[a] foo bar [b] foo baz [c] |a &b""".split())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
 
         self.assertEquals(result["c"], set(["foo"]))
 
     def test_difference_setstream(self):
         stream = iter("""[a] foo bar [b] foo baz [c] |a ^b""".split())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
         
         self.assertEquals(result["c"], set(["baz", "bar"]))
 
     def test_alternate_setstream_syntax(self):
         stream = iter("""[a] foo bar [b] foo baz [c] +a *b""".split())
-        result = setstream(stream, default="all")
+        result = StringSets(default="all").parse(stream)
+
+        print result
 
         self.assertEquals(result["c"], set(["foo"]))
 
     def test_targetrange_notarange(self):
-        result = targetrange("login01")
+        result = StringSets.range("login01")
 
         self.assertEqual(result, ["login01"])
     
     def test_targetrange_quoted(self):
-        result = targetrange('"login01"')
+        result = StringSets.range('"login01"')
 
         self.assertEqual(result, ["login01"])
 
     def test_targetrange_range(self):
-        result = targetrange("login[01:04]")
+        result = StringSets.range("login[01:04]")
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])
 
     def test_targetrange_badrange(self):
-        result = targetrange("login01-")
+        result = StringSets.range("login01-")
 
         self.assertEqual(result, ["login01-"])
 
     def test_targetrange_uneven_widths(self):
-        result = targetrange("login[:04]")
+        result = StringSets.range("login[:04]")
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])
