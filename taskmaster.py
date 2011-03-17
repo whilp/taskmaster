@@ -96,7 +96,7 @@ class StringSets(object):
     range = classmethod(range)
 
     def getvalue(self, spec, attr, default):
-        value = getattr(spec, attr)
+        value = getattr(spec, attr, None)
         if value in (None, ""):
             value = default
         return int(value)

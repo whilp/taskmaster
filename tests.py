@@ -172,3 +172,8 @@ class TestStringSets(BaseTest):
         result = StringSets.range("foo[:04]", inclusive=False)
 
         self.assertEqual(result, ["foo01", "foo02", "foo03"])
+
+    def test_getvalue_missing(self):
+        result = StringSets.getvalue(object(), "foo", "1")
+
+        self.assertEqual(result, 1)
