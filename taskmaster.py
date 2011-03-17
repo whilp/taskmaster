@@ -162,7 +162,7 @@ def summarize(procs, nprocs=None):
     failed = len(failed)
     completed = succeeded + failed
 
-    return ("%d/%d/%d tasks running/completed/total, %0.2f%% failed",
+    return "%d/%d/%d tasks running/completed/total, %0.2f%% failed" % (
         len(running), completed, nprocs, (100.0 * failed)/max(nprocs, 1))
 
 def maptask(task, targets, output, maxrunning=1, interval=.2, handler=None):
@@ -311,7 +311,13 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
         default=".runtime", data=alltargets).get(".runtime", [])
 
     def handler(procs, nprocs):
-        log.info(*summarize(procs, nprocs))
+        stderr.write(summarize(procs, nprocs) + "\n")
+
+        failed = [proc for proc in procs if proc.returncode != 0]
+        if failed:
+            stderr.write("%d failed targets:\n" % len(failed))
+            for proc in failed:
+                stderr.write("%25s (%d)\n" % (proc.target, proc.returncode))
 
     output = Output
     output.root = opts.out
@@ -326,12 +332,6 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
         for proc in procs:
             echo(proc, streams, proc.target)
     handler(procs, nprocs)
-
-    failed = [proc for proc in procs if proc.returncode != 0]
-    if failed:
-        stdout.write("%d failed targets:\n" % len(failed))
-        for proc in failed:
-            stdout.write("%25s (%d)\n" % (proc.target, proc.returncode))
 
 def entry():
     try:
