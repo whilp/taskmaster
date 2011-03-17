@@ -8,6 +8,11 @@ class BaseTest(unittest.TestCase):
     pass
 
 class TestStringSets(BaseTest):
+
+    def test_init(self):
+        sets = StringSets()
+
+        self.assertEqual(sets.sets, None)
     
     def test_basic(self):
         stream = iter("""
