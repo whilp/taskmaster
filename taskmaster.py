@@ -77,19 +77,19 @@ def targetrange(value, inclusive=True):
     format = "%s%%0%dd" % (base, width)
     return [format % i for i in  range(start, stop, step)]
 
-def groups(stream, default=None, data=None):
-    if data is None:
-        data = {}
-    group = None
+def setstream(stream, default=None, sets=None):
+    if sets is None:
+        sets = {}
+    name = None
     for line in stream:
         line = line.strip()
         if line.startswith("#"):
             continue
         if not line:
-            group = None
+            name = None
             continue
         elif line.startswith("["):
-            group = line.strip("[]")
+            name = line.strip("[]")
             continue
 
         ops = {
@@ -100,22 +100,22 @@ def groups(stream, default=None, data=None):
             "*": "intersection_update",
             "^": "symmetric_difference_update",
         }
-        ongroup = ops.get(line[0], False) and True
+        onset = ops.get(line[0], False) and True
         method = ops.get(line[0], "update")
         value = line.strip(''.join(ops))
 
-        if value not in data:
-            if ongroup and method == "update":
+        if value not in sets:
+            if onset and method == "update":
                 continue
             value = targetrange(value)
         else:
-            value = data[value]
+            value = sets[value]
 
-        groups = [group, default]
-        [getattr(data.setdefault(g, set()), method)(value)
-                for g in groups if g is not None]
+        names = [name, default]
+        [getattr(sets.setdefault(n, set()), method)(value)
+                for n in names if n is not None]
 
-    return data
+    return sets
 
 def ncpu_bsd():
     stdout = subprocess.Popen(["sysctl", "-n", "hw.ncpufound"],
@@ -307,13 +307,13 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
 
     alltargets = {}
     try:
-        alltargets = groups(open(opts.targets, 'r'), default=".all")
-        log.debug("read %d groups from targets file %r", len(alltargets), opts.targets)
+        alltargets = setstream(open(opts.targets, 'r'), default=".all")
+        log.debug("read %d target sets from file %r", len(alltargets), opts.targets)
     except IOError:
         pass
 
-    targets = groups(targets,
-        default=".runtime", data=alltargets).get(".runtime", [])
+    targets = setstream(targets,
+        default=".runtime", sets=alltargets).get(".runtime", [])
 
     def handler(procs, nprocs):
         stderr.write(summarize(procs, nprocs) + "\n")
