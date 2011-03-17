@@ -173,6 +173,14 @@ class TestStringSets(BaseTest):
 
         self.assertEqual(result, ["foo01", "foo02", "foo03"])
 
+    def test_getvalue(self):
+        class Spec(object): pass
+        spec = Spec()
+        spec.attr = 1
+        result = StringSets.getvalue(spec, "attr", 0)
+
+        self.assertEqual(result, 1)
+
     def test_getvalue_missing(self):
         result = StringSets.getvalue(object(), "foo", "1")
 
