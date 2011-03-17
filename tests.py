@@ -141,28 +141,28 @@ class TestStringSets(BaseTest):
 
         self.assertEquals(result["c"], set(["foo"]))
 
-    def test_targetrange_notarange(self):
+    def test_range_invalid(self):
         result = StringSets.range("login01")
 
         self.assertEqual(result, ["login01"])
     
-    def test_targetrange_quoted(self):
+    def test_range_quoted(self):
         result = StringSets.range('"login01"')
 
         self.assertEqual(result, ["login01"])
 
-    def test_targetrange_range(self):
+    def test_range_range(self):
         result = StringSets.range("login[01:04]")
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])
 
-    def test_targetrange_badrange(self):
+    def test_range_badrange(self):
         result = StringSets.range("login01-")
 
         self.assertEqual(result, ["login01-"])
 
-    def test_targetrange_uneven_widths(self):
+    def test_range_uneven_widths(self):
         result = StringSets.range("login[:04]")
 
         self.assertEqual(result,
