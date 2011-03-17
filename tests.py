@@ -167,3 +167,8 @@ class TestStringSets(BaseTest):
 
         self.assertEqual(result,
             ["login01", "login02", "login03", "login04"])
+
+    def test_range_noninclusive(self):
+        result = StringSets.range("foo[:04]", inclusive=False)
+
+        self.assertEqual(result, ["foo01", "foo02", "foo03"])
