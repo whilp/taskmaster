@@ -6,6 +6,7 @@ import signal
 import stat
 import subprocess
 import sys
+import textwrap
 import time
 
 try:
@@ -313,11 +314,27 @@ def main(argv, stdin=None, stdout=None, stderr=None, tasks={}):
     def handler(procs, nprocs):
         stderr.write(summarize(procs, nprocs) + "\n")
 
-        failed = [proc for proc in procs if proc.returncode != 0]
-        if failed:
-            stderr.write("%d failed targets:\n" % len(failed))
-            for proc in failed:
-                stderr.write("%25s (%d)\n" % (proc.target, proc.returncode))
+        failures = {}
+        failed = 0
+        for proc in procs:
+            if proc.returncode != 0:
+                failures.setdefault(proc.returncode, []).append(proc)
+                failed += 1
+        if not failures:
+            return
+
+        wrap = textwrap.wrap
+        indent = 7 * " "
+        stderr.write("%d failed targets, %d unique return codes:\n" % (
+            failed, len(failures)))
+        failures = sorted(failures.items(), key=lambda x: len(x[1]))
+        for returncode, failed in failures:
+            targets = ', '.join(sorted(x.target for x in failed))
+            targets = wrap(targets, 80,
+                initial_indent=indent, subsequent_indent=indent)
+            stderr.write("%5d: %s\n" % (returncode, targets.pop(0).strip()))
+            for line in targets:
+                stderr.write(line + "\n")
 
     output = Output
     output.root = opts.out
