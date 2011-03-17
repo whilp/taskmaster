@@ -13,138 +13,22 @@ class TestStringSets(BaseTest):
         sets = StringSets()
 
         self.assertEqual(sets.sets, None)
-    
-    def test_basic(self):
-        stream = iter("""
-            [login]
-            login01
-            login02
-            login03""".splitlines())
-        result = StringSets().parse(stream)
 
-        self.assertEqual(result["login"], 
-            set(["login01", "login02", "login03"]))
-
-    def test_comments(self):
-        stream = iter("""
-            [a]
-            b
-            # c!!!
-            d""".splitlines())
-        result = StringSets().parse(stream)
-
-        self.assertEqual(result["a"], set(["b", "d"]))
-
-    def test_default(self):
-        stream = iter("""
-            [login]
-            login01
-            login02
-            login03""".splitlines())
-        result = StringSets(default="all").parse(stream)
-
-        self.assertEqual(result["all"], 
-            set(["login01", "login02", "login03"]))
-
-    def test_exclude(self):
-        stream = iter("""
-            [login]
-            login01
-            login02
-            login03
-            -login02""".splitlines())
-        result = StringSets().parse(stream)
-
-        self.assertEqual(result["login"], set(["login01", "login03"]))
-
-    def test_include_setstream(self):
-        stream = iter("""
-            [a]
-            foo
-            bar
-
-            [b]
-            |a
-            """.splitlines())
-        result = StringSets().parse(stream)
-
-        self.assertEqual(result["b"], set(["foo", "bar"]))
-
-    def test_exclude_setstream(self):
-        stream = iter("""
-            [a]
-            foo
-            bar
-
-            [b]
-            foo
-            bar
-            baz
-
-            [c]
-            |b
-            -a
-            """.splitlines())
-        result = StringSets(stream).parse(stream)
-
-        self.assertEqual(result["c"], set(["baz"]))
-
-    def test_multiple_runs(self):
+    def test_expand(self):
         sets = StringSets()
-        stream = iter("""
-            [a]
-            foo
-            bar""".splitlines())
-        sets.parse(stream)
 
-        stream = iter("""
-            [b]
-            spam
-            |a""".splitlines())
-        result = sets.parse(stream)
+        result = {}
+        sets.expand("name", "foo", result)
 
-        self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
+        self.assertEqual(result, {"name": set(["foo"])})
 
-    def test_runtime_setstream(self):
-        sets = StringSets(default="all")
-        stream = iter("""[a] baz""".split())
-        sets.parse(stream)
-        stream = iter("""foo bar |a""".split())
-        result = sets.parse(stream)
+    def test_expand_operator(self):
+        sets = StringSets()
 
-        self.assertEquals(result["all"], set(['baz', 'foo', 'bar']))
+        result = {}
+        sets.expand("name", "*foo", result)
 
-    def test_undefined_setstream(self):
-        stream = iter("""baz |a""".split())
-        result = StringSets(default="all").parse(stream)
-
-        self.assertEquals(result["all"], set(["baz"]))
-
-    def test_empty_intersection_setstream(self):
-        stream = iter("""baz &a""".split())
-        result = StringSets(default="all").parse(stream)
-
-        self.assertEquals(result["all"], set())
-
-    def test_intersection_setstream(self):
-        stream = iter("""[a] foo bar [b] foo baz [c] |a &b""".split())
-        result = StringSets(default="all").parse(stream)
-
-        self.assertEquals(result["c"], set(["foo"]))
-
-    def test_difference_setstream(self):
-        stream = iter("""[a] foo bar [b] foo baz [c] |a ^b""".split())
-        result = StringSets(default="all").parse(stream)
-        
-        self.assertEquals(result["c"], set(["baz", "bar"]))
-
-    def test_alternate_setstream_syntax(self):
-        stream = iter("""[a] foo bar [b] foo baz [c] +a *b""".split())
-        result = StringSets(default="all").parse(stream)
-
-        print result
-
-        self.assertEquals(result["c"], set(["foo"]))
+        self.assertEqual(result, {})
 
     def test_range_invalid(self):
         result = StringSets.range("login01")

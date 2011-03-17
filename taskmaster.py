@@ -118,13 +118,11 @@ class StringSets(object):
                 yield name, string
 
     def expand(self, name, string, sets):
-        onset = self.operators.get(string[0], False) and True
+        isop = string[0] in self.operators
         method = self.operators.get(string[0], "update")
         value = string.strip(''.join(self.operators))
 
         if value not in sets:
-            if onset and method == "update":
-                return
             value = self.range(value)
         else:
             value = sets[value]
