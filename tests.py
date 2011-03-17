@@ -125,6 +125,12 @@ class TestGroups(BaseTest):
 
         self.assertEquals(result["c"], set(["foo"]))
 
+    def test_alternate_group_syntax(self):
+        stream = iter("""[a] foo bar [b] foo baz [c] +a *b""".split())
+        result = groups(stream, default="all")
+
+        self.assertEquals(result["c"], set(["foo"]))
+
     def test_targetrange_notarange(self):
         result = targetrange("login01")
 
