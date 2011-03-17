@@ -94,7 +94,7 @@ def groups(stream, default=None, data=None):
 
         ops = {
             "-": "difference_update",
-            "+": "update",
+            "|": "update",
         }
         ongroup = ops.get(line[0], False) and True
         method = ops.get(line[0], "update")

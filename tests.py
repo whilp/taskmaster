@@ -59,7 +59,7 @@ class TestGroups(BaseTest):
             bar
 
             [b]
-            +a
+            |a
             """.splitlines())
         result = groups(stream)
 
@@ -77,7 +77,7 @@ class TestGroups(BaseTest):
             baz
 
             [c]
-            +b
+            |b
             -a
             """.splitlines())
         result = groups(stream)
@@ -94,7 +94,7 @@ class TestGroups(BaseTest):
         stream = iter("""
             [b]
             spam
-            +a""".splitlines())
+            |a""".splitlines())
         result = groups(stream, data=result)
 
         self.assertEqual(result["b"], set(["foo", "bar", "spam"]))
@@ -102,13 +102,13 @@ class TestGroups(BaseTest):
     def test_runtime_groups(self):
         stream = iter("""[a] baz""".split())
         data = groups(stream)
-        stream = iter("""foo bar +a""".split())
+        stream = iter("""foo bar |a""".split())
         result = groups(stream, default="all", data=data)
 
         self.assertEquals(result["all"], set(['baz', 'foo', 'bar']))
 
     def test_undefined_group(self):
-        stream = iter("""baz +a""".split())
+        stream = iter("""baz |a""".split())
         result = groups(stream, default="all")
 
         self.assertEquals(result["all"], set(["baz"]))
